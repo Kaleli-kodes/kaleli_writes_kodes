@@ -1,0 +1,4 @@
+import pg from 'pg'; import {config} from './config.js';
+export const pool=new pg.Pool({connectionString:config.databaseUrl,ssl:config.env==='production'?{rejectUnauthorized:true}:false,max:10});
+export async function transaction(actor, work){const client=await pool.connect();try{await client.query('BEGIN');await client.query("SELECT set_config('app.user_id', $1, true)",[actor?.userId||'']);await client.query("SELECT set_config('app.business_id', $1, true)",[actor?.businessId||'']);const result=await work(client);await client.query('COMMIT');return result;}catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}}
+export async function audit(client,actor,action,entityType,entityId,metadata={}){await client.query('INSERT INTO audit_logs (business_id,user_id,action,entity_type,entity_id,metadata) VALUES ($1,$2,$3,$4,$5,$6)',[actor.businessId,actor.userId,action,entityType,entityId,metadata]);}

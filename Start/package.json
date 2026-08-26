@@ -1,0 +1,8 @@
+{
+  "name":"bizai-africa",
+  "private":true,
+  "version":"0.2.0",
+  "type":"module",
+  "scripts":{"check":"node --check app.js && node --check server/src/app.js","start":"npx serve .","api":"node server/src/index.js","db:up":"docker compose up -d postgres","db:migrate":"node server/scripts/migrate.js","db:backup":"node server/scripts/backup.js","test":"node --test server/test/*.test.js"},
+  "dependencies":{"argon2":"^0.43.0","cookie-parser":"^1.4.7","cors":"^2.8.5","decimal.js":"^10.6.0","dotenv":"^16.6.1","express":"^5.1.0","express-rate-limit":"^8.0.1","helmet":"^8.1.0","jose":"^6.0.12","pg":"^8.16.3","zod":"^4.0.10"}
+}

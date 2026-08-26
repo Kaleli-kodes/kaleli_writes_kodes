@@ -1,0 +1,7 @@
+CREATE TYPE feedback_kind AS ENUM ('rating','nps','comment','bug','feature_request','ai_response');
+CREATE TABLE ai_messages (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), business_id uuid NOT NULL REFERENCES businesses(id), user_id uuid NOT NULL REFERENCES users(id), question text NOT NULL CHECK(length(question)<=1000), answer text NOT NULL CHECK(length(answer)<=4000), created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE feedback (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), business_id uuid NOT NULL REFERENCES businesses(id), user_id uuid NOT NULL REFERENCES users(id), ai_message_id uuid REFERENCES ai_messages(id), kind feedback_kind NOT NULL, feature text, rating smallint CHECK(rating BETWEEN 1 AND 5), nps smallint CHECK(nps BETWEEN 0 AND 10), comment text CHECK(length(comment)<=2000), created_at timestamptz NOT NULL DEFAULT now(), CHECK(rating IS NOT NULL OR nps IS NOT NULL OR comment IS NOT NULL));
+CREATE INDEX feedback_business_created_idx ON feedback(business_id,created_at DESC); CREATE INDEX ai_messages_business_created_idx ON ai_messages(business_id,created_at DESC);
+ALTER TABLE ai_messages ENABLE ROW LEVEL SECURITY; ALTER TABLE feedback ENABLE ROW LEVEL SECURITY; ALTER TABLE ai_messages FORCE ROW LEVEL SECURITY; ALTER TABLE feedback FORCE ROW LEVEL SECURITY;
+CREATE POLICY ai_messages_tenant ON ai_messages USING(is_business_member(business_id)) WITH CHECK(is_business_member(business_id));
+CREATE POLICY feedback_tenant ON feedback USING(is_business_member(business_id)) WITH CHECK(is_business_member(business_id));

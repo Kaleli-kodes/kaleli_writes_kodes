@@ -1,0 +1,4 @@
+import fs from 'node:fs/promises'; import path from 'node:path'; import {fileURLToPath} from 'node:url'; import {pool} from '../src/db.js';
+const here=path.dirname(fileURLToPath(import.meta.url)),dir=path.join(here,'../migrations');
+const client=await pool.connect();
+try{await client.query('CREATE TABLE IF NOT EXISTS schema_migrations (filename text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');for(const file of (await fs.readdir(dir)).filter(f=>f.endsWith('.sql')).sort()){if((await client.query('SELECT 1 FROM schema_migrations WHERE filename=$1',[file])).rowCount)continue;await client.query('BEGIN');await client.query(await fs.readFile(path.join(dir,file),'utf8'));await client.query('INSERT INTO schema_migrations(filename) VALUES($1)',[file]);await client.query('COMMIT');console.log(`Applied ${file}`)}}catch(e){await client.query('ROLLBACK');throw e}finally{client.release();await pool.end();}
